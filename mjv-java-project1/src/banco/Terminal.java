@@ -36,26 +36,34 @@ public class Terminal {
         cancelarConta(c2, "Comprou colchão novo");
 
 
-        imprimirTransacoes(c1);
-        imprimirTransacoes(c2);
+        imprimirTransacoes(c1.getTransacoes());
+        imprimirTransacoes(c2.getTransacoes());
+
+        List<Transacao> extrato = c1.consultarExtrato(LocalDate.of(2023, 6, 14), LocalDate.of(2023, 6, 14));
+
+        imprimirTransacoes(extrato);
+
     }
 
     private static void cancelarConta(ContaCorrente c, String motivo) {
         if (c.cancelarConta(motivo)) {
             System.out.println("Conta Cancelada");
-            imprimirTransacoes(c);
+            imprimirTransacoes(c.getTransacoes());
         } else {
             System.out.println("\n Não foi possivel cancelar a conta\n");
         }
 
     }
 
-    public static void imprimirTransacoes(ContaCorrente c) {
+    public static void imprimirTransacoes(List<Transacao> transacoes) {
 
-        List<Transacao> transacoes = c.getTransacoes();
+        System.out.println("IMPRIMINDO TRANSAÇÔES\n");
+
         for (Transacao transacao : transacoes) {
             System.out.println(transacao.getData() + "  " + transacao.getDescricao() + " " + transacao.getValor());
         }
-        System.out.println("-----------------------------------\nSaldo: " + c.getSaldo());
+
+        System.out.println("\n-----------------------------------------\n");
     }
+
 }
