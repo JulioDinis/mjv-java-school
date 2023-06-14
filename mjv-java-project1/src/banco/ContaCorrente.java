@@ -51,8 +51,15 @@ public class ContaCorrente {
     }
 
     List<Transacao> consultarExtrato(LocalDate di, LocalDate df) {
-        //logica
-        return transacoes;
+
+        List<Transacao> extrato = new ArrayList<>();
+        for (Transacao transacao : transacoes) {
+            LocalDate dataT = transacao.getData();
+            if (dataT.isAfter(di.minusDays(1)) && dataT.isBefore(df.plusDays(1))) {
+                extrato.add(transacao);
+            }
+        }
+        return extrato;
     }
 
     boolean cancelarConta(String justificativa) {
@@ -87,10 +94,6 @@ public class ContaCorrente {
 
     public Double getSaldo() {
         return saldo;
-    }
-
-    public void setSaldo(Double saldo) {
-        this.saldo = saldo;
     }
 
     public Integer getNumeroConta() {
