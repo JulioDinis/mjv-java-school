@@ -18,11 +18,10 @@ public class ContaCorrente {
         this.numeroAgencia = numeroAgencia;
     }
 
-    boolean sacar(double valor, String tipo, String descricao) {
+    boolean sacar(double valor, String tipo, String descricao) throws ContaSemSaldoException {
         if (saldo < valor) {
-            return false;
+            throw new ContaSemSaldoException(this);
         }
-
         saldo = saldo - valor;
         incluirTransacao(valor, tipo, descricao);
         return true;
@@ -36,11 +35,19 @@ public class ContaCorrente {
         transacoes.add(t);
     }
 
-    void transferir(ContaCorrente contaDestino, Double valor) {
+    void transferir(ContaCorrente contaDestino, Double valor) throws ContaInativaException, ContaSemSaldoException {
 
-        if (consultarSaldo() >= valor) {
-            sacar(valor, "TRANSFERENCIA", "Transferido para " + contaDestino.getCliente().getNome());
-            contaDestino.depositar(valor, "TRANSFERENCIA", "Transferencia recebida de: " + getCliente().getNome());
+        if (contaDestino.isAtiva()) {
+            if (consultarSaldo() >= valor) {
+                sacar(valor, "TRANSFERENCIA", "Transferido para " + contaDestino.getCliente().getNome());
+                contaDestino.depositar(valor, "TRANSFERENCIA", "Transferencia recebida de: " + getCliente().getNome());
+            } else {
+                incluirTransacao(valor, "FALHA", "Não foi possivel Transferir saldo insulficiente");
+                throw new ContaSemSaldoException(this);
+            }
+        } else {
+            incluirTransacao(valor, "FALHA", "Não foi possivel Transferir: Conta Inativa");
+            throw new ContaInativaException(contaDestino);
         }
 
     }
@@ -62,26 +69,29 @@ public class ContaCorrente {
         return extrato;
     }
 
-    boolean cancelarConta(String justificativa) {
-
-        if (saldo == 0) {
-            this.ativa = false;
-            incluirTransacao(0D, "CANCELAMENTO", "Conta Cancelada: " + justificativa);
-            return true;
-        } else {
+    boolean cancelarConta(String justificativa) throws ContaInativaException {
+        if (isAtiva()) {
+            if (saldo == 0) {
+                this.ativa = false;
+                incluirTransacao(0D, "CANCELAMENTO", "Conta Cancelada: " + justificativa);
+                return true;
+            }
             incluirTransacao(saldo, "FALHA", "Não foi possivel Cancelar");
-        }
+
+        } else throw new ContaInativaException(this);
+
         return false;
     }
 
-    void depositar(Double valor, String tipo, String descricao) {
-        saldo = saldo + valor;
-        incluirTransacao(valor, tipo, descricao);
-    }
+    void depositar(Double valor, String tipo, String descricao) throws ContaInativaException {
 
-    private void receberTransferencia(Double valor) {
-        saldo = saldo + valor;
-        incluirTransacao(valor, "TRANSFERENCIA", "Tranferencia Recebida");
+        if (isAtiva()) {
+            saldo = saldo + valor;
+            incluirTransacao(valor, tipo, descricao);
+        } else
+            throw new ContaInativaException(this);
+
+
     }
 
     public Cliente getCliente() {
